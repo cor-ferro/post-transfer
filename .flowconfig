@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.js": "flow"
+    },
+    "flowide.enable": true
+}
