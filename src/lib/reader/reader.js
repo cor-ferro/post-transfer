@@ -6,4 +6,8 @@ export default class Reader {
 	setResource(resource) {
 		this.resource = resource;
 	}
+
+	getResource() {
+		return this.resource;
+	}
 }

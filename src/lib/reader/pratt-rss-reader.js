@@ -2,7 +2,9 @@ import RssReader from './rss-reader';
 
 export default class PrattRssReader extends RssReader {
 	async read() {
-		this.setResource('https://api.pratt.top/rss/special/vk.rss?group=-36775802&limit=2');
+		if (!this.resource) {
+			throw new Error('unknown resource');
+		}
 
 		const xmlDoc = await this.readXml();
 
