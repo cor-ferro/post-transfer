@@ -10,4 +10,8 @@ export default class Reader {
 	getResource() {
 		return this.resource;
 	}
+
+	mapData() {
+		throw new Error('method should be overrided');
+	}
 }

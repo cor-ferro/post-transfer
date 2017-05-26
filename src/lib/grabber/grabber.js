@@ -1,15 +1,28 @@
+import Promise from 'bluebird';
+
 export default class Grabber {
 	constructor() {
-		this.reader = null;
+		this.source = [];
 	}
 
-	setReader(reader) {
-		this.reader = reader;
+	setSource(source = {}) {
+		this.source = source;
 	}
 
 	async grab() {
-		const data = await this.reader.read();
+		const sourceData = await this.source.read();
 
-		return data;
+		return {
+			items: sourceData,
+		};
+
+		// sourcesData.forEach((sourceData, sourceIndex) => {
+		// 	output.push({
+		// 		source: this.sources[sourceIndex],
+		// 		items: sourceData,
+		// 	});
+		// });
+
+		// return output;
 	}
 }
