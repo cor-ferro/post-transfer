@@ -3,9 +3,12 @@ import de from 'deep-extend';
 import devConfig from './dev';
 import testConfig from './test';
 import productionConfig from './production';
+import { debugApp } from '../lib/debug';
 
-const ENV = process.env.ENV || 'dev';
+const ENV = process.env.NODE_ENV || 'dev';
 let envConfig = {};
+
+debugApp(`NODE_ENV: ${ENV}`);
 
 switch (ENV) {
 case 'dev':
