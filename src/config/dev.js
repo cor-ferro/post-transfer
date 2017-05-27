@@ -9,8 +9,17 @@ const prattRssMapping = {
 };
 
 export default {
+	intervals: {
+		grab: 60000 * 1,
+		send: 60000 / 6,
+	},
+	unpublished: {
+		countByAttempt: 3,
+	},
 	db: {
-		path: 'mongodb://localhost/post-transfer',
+		mongo: {
+			path: 'mongodb://localhost/post-transfer',
+		},
 		redis: {
 			queue: {
 				id: 5,
@@ -38,7 +47,7 @@ export default {
 			enabled: true,
 			params: {
 				pageId: '789603997880305',
-				token: 'EAACEdEose0cBAIZCg3x1KC8AL5CFNDAouDj3K1iGHqML9KtD4zQehI2vna36QfDVg7PstgHs8gSPhGRDJhRbZClZBOCntZBKoKB3DvO9pZBkHPjQ9Gzwa6fCLNimGmchOoJ91gt4o75P1OT1tEVVjQS4RDUuDWpIKpmx8sZB4VZCizWcieiOo4K4ZA6o04awFX4ZD',
+				token: 'EAAD3ytDhZAEsBABEAVbvguoLCKBZAKWKyJ203BtZBAbiO9Sfvq9hZCXrPfzyQSb3OaC640xefTcBaoegx7PeWbNGwVzyTIVkD0XarbL42FOQaA5ENaP5QT0kHxCbLO4qyZAv9xCw59xIWir5dl6qjUvrZAFAvZCZBzuQdk4KlnijKoUIQEFdz7jr',
 			},
 		},
 	],

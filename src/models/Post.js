@@ -5,6 +5,7 @@ import mongoose, { Schema } from 'mongoose';
 import Promise from 'bluebird';
 import fse from 'fs-extra';
 import config from '../config';
+import { debugFileResources } from '../lib/debug';
 
 let Post;
 
@@ -91,6 +92,10 @@ postSchema.methods.getPostDirPath = function getPostDirPath() {
 	return path.join(config.filesStorage, postId);
 };
 
+postSchema.methods.isAllDestinationsPublished = function isAllDestinationsPublished() {
+	return this.destinations.every(destination => destination.isPublished === true);
+};
+
 postSchema.methods.downloadResources = async function downloadResources() {
 	const postDirPath = this.getPostDirPath();
 
@@ -117,8 +122,17 @@ postSchema.methods.downloadResources = async function downloadResources() {
 	await Promise.all(resourcesPromises);
 };
 
+postSchema.methods.tryReleaseResources = async function tryReleaseResources() {
+	return Promise.resolve(this.isAllDestinationsPublished())
+		.then((isAllPublished) => {
+			return isAllPublished ? this.releaseResources() : Promise.resolve();
+		});
+};
+
 postSchema.methods.releaseResources = async function releaseResources() {
 	const postDirPath = this.getPostDirPath();
+
+	debugFileResources(`release ${this.get('_id')}`);
 
 	await fse.remove(postDirPath);
 

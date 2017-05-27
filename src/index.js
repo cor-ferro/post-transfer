@@ -1,13 +1,14 @@
 import Promise from 'bluebird';
 import app from './app';
 import queueFactory from './lib/queue';
-import config from './config';
+import config, { ENV } from './config';
 import { debugApp, debugGrab, debugInterval } from './lib/debug';
 import sourcesFactory from './lib/source';
 import PostGrabber from './lib/grabber/post-grabber';
 import PostModel from './models/Post';
 import PostDestinationModel from './models/PostDestination';
 import destinationsFactory from './lib/destination';
+import { promisesSome } from './lib/utils';
 
 const queue = queueFactory.create();
 
@@ -48,15 +49,16 @@ async function saveSourceDatasourceData(sourceData) {
 			.catch(error => reject(error));
 	}));
 
-	return Promise
-		.some(postPromises, (postPromises.length - 1) || 1)
+	return promisesSome(postPromises)
 		.then(() => debugApp('all posts saved'))
 		.catch(error => debugGrab(error));
 }
 
 async function sendUnpublishedPosts() {
 	const destinations = await PostDestinationModel.find({ enabled: true });
-	const unpublishedPosts = await PostModel.findUnPublished({ limit: 10 });
+	const unpublishedPosts = await PostModel.findUnPublished({
+		limit: config.unpublished.countByAttempt,
+	});
 
 	const promises = [];
 
@@ -76,8 +78,7 @@ async function sendUnpublishedPosts() {
 				debugApp('not found destination');
 				postDestination.set('isFailed', true);
 				postDestination.set('reason', 'not found destination');
-				post.save();
-				return;
+				return post.save();
 			}
 
 			const destination = destinationsFactory.create(destinationModel);
@@ -86,19 +87,21 @@ async function sendUnpublishedPosts() {
 				debugApp(`unknown destination type ${destinationModel.type}`);
 				postDestination.set('isFailed', true);
 				postDestination.set('reason', `unknown destination type ${destinationModel.type}`);
-				post.save();
-				return;
+				return post.save();
 			}
 
 			debugApp('create post');
+			// const promise = Promise.resolve()
 			const promise = destination
 				.createPost(post)
-			// const promise = Promise.resolve()
 				.then(() => {
 					postDestination.set('isFailed', false);
 					postDestination.set('isPublished', true);
 
-					return post.save();
+					return post
+						.tryReleaseResources()
+						.then(() => post.save())
+						.catch(() => post.save());
 				})
 				.catch((error) => {
 					debugApp(error.message);
@@ -113,7 +116,7 @@ async function sendUnpublishedPosts() {
 		});
 	});
 
-	return Promise.some(promises, promises.length - 1);
+	return promisesSome(promises);
 }
 
 async function intervalGrabPosts() {
@@ -142,20 +145,43 @@ async function intervalSendPosts() {
 }
 
 // @todo: удалить перед релизом
-app.once('start', async () => {
-	await PostModel.remove({});
+app.once('ready', async () => {
+	if (ENV === 'dev') {
+		debugApp('dev env, clear posts');
+		await PostModel.remove({});
+	}
 
-	// увезти в конфиг
-	const minute = 60000;
-	const intervalGrabMs = minute * 5;
-	const intervalSendMs = minute * 2.5;
-
-	intervalGrabId = setInterval(intervalGrabPosts, intervalGrabMs);
-	intervalSendId = setInterval(intervalSendPosts, intervalSendMs);
+	app.emit('start');
 
 	intervalGrabPosts();
 });
 
+app.on('start', () => {
+	debugApp('start app');
+	const intervalGrabMs = config.intervals.grab;
+	const intervalSendMs = config.intervals.send;
+
+	const SAFE_INTERVAL = 5000;
+	const isTooLowerInterval = [
+		intervalGrabMs,
+		intervalSendMs,
+	].some(interval => interval < SAFE_INTERVAL);
+
+	if (isTooLowerInterval) {
+		debugApp(`some interval, value is lower than ${SAFE_INTERVAL}. prevent start app.`);
+		return;
+	}
+
+	intervalGrabId = setInterval(intervalGrabPosts, intervalGrabMs);
+	intervalSendId = setInterval(intervalSendPosts, intervalSendMs);
+});
+
+app.on('stop', () => {
+	debugApp('stop app');
+	clearInterval(intervalGrabId);
+	clearInterval(intervalSendId);
+});
+
 queue.on('job complete', id => debugGrab('job complete', id));
 
-app.start();
+app.run();

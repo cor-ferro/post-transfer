@@ -1,12 +1,13 @@
 import createDebug from 'debug';
 
-const debugGrab = createDebug('grab');
-const debugApp = createDebug('app');
-const debugDb = createDebug('db');
-const debugSource = createDebug('source');
-const debugDest = createDebug('destination');
-const debugReader = createDebug('reader');
-const debugInterval = createDebug('interval');
+const debugGrab = createDebug('post.grab');
+const debugApp = createDebug('post.app');
+const debugDb = createDebug('post.db');
+const debugSource = createDebug('post.source');
+const debugDest = createDebug('post.destination');
+const debugReader = createDebug('post.reader');
+const debugInterval = createDebug('post.interval');
+const debugFileResources = createDebug('post.file-resource');
 
 export {
 	debugApp,
@@ -16,4 +17,5 @@ export {
 	debugReader,
 	debugDest,
 	debugInterval,
+	debugFileResources,
 };

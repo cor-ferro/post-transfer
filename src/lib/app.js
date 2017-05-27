@@ -62,12 +62,12 @@ class App extends EventEmitter {
 			});
 	}
 
-	async start() {
+	async run() {
 		await this.connectDb();
 		await this.createDestinationsInDb();
 		await this.createFileStorage();
 
-		this.emit('start');
+		this.emit('ready');
 	}
 }
 

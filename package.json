@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "./node_modules/.bin/gulp dev",
-    "start": "node ./dist/index.js"
+    "start": "DEBUG=post.* node ./dist/index.js"
   },
   "keywords": [],
   "author": "",

@@ -8,7 +8,7 @@ mongoose.Promise = Promise;
 export default {
 	connection: null,
 	connect() {
-		this.connection = mongoose.connect(config.db.path);
+		this.connection = mongoose.connect(config.db.mongo.path);
 
 		this.connection = mongoose.connection;
 		this.connection.on('error', (error) => {

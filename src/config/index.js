@@ -5,7 +5,7 @@ import testConfig from './test';
 import productionConfig from './production';
 import { debugApp } from '../lib/debug';
 
-const ENV = process.env.NODE_ENV || 'dev';
+export const ENV = process.env.NODE_ENV || 'dev';
 let envConfig = {};
 
 debugApp(`NODE_ENV: ${ENV}`);

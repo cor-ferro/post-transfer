@@ -4,6 +4,7 @@ import Promise from 'bluebird';
 import de from 'deep-extend';
 import Destination from './destination';
 import { debugDest } from '../debug';
+import { promisesSome } from '../utils';
 
 import { POST_FILE_TYPE_IMAGE } from '../../models/Post';
 
@@ -39,27 +40,22 @@ class FacebookDestination extends Destination {
 
 	createPost(modelPost) {
 		if (typeof this.params.pageId !== 'undefined') {
-			console.log('this.createPagePost');
 			return this.createPagePost(modelPost);
 		} else {
-			console.log('only pages');
+			debugDest('facebook support only pages');
 			throw new Error('support only pages');
 		}
 	}
 
 	async createPagePost(modelPost) {
-		console.log('createPagePost');
+		debugDest('facebook createPagePost');
+
 		const imageResourcePromises = modelPost.resources
 			.filter(filterImageResource)
 			.slice(0, 1) // @todo: В фейсбук грузим одну фотку, решить проблему
 			.map(resource => this.createPagePhoto(resource, { no_story: true }));
 
-		const imageResourcePromisesSize = imageResourcePromises.length - 1;
-		let uploadedPhotos = [];
-
-		if (imageResourcePromises.length > 0) {
-			uploadedPhotos = await Promise.some(imageResourcePromises, imageResourcePromisesSize || 1);
-		}
+		const uploadedPhotos = await promisesSome(imageResourcePromises);
 
 		const pageUrl = this.createPageUrl(['feed']);
 		const urlOptions = {
@@ -84,7 +80,7 @@ class FacebookDestination extends Destination {
 					console.log(error);
 					reject();
 				} else {
-					console.log(body);
+					debugDest(body);
 					resolve(JSON.parse(body));
 				}
 			});
@@ -97,12 +93,6 @@ class FacebookDestination extends Destination {
 				resolve();
 				return;
 			}
-
-			// стаб, удалить при релизе
-			// resolve({
-			// 	id: '790076047833100',
-			// 	post_id: '789603997880305_790076047833100',
-			// });
 
 			const requestParams = this.createRequestParams({
 				uri: this.createPageUrl(['photos']),
@@ -117,7 +107,7 @@ class FacebookDestination extends Destination {
 					console.log(error);
 					reject();
 				} else {
-					console.log(body);
+					debugDest(body);
 					resolve(JSON.parse(body));
 				}
 			});
