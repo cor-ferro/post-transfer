@@ -102,7 +102,12 @@ postSchema.methods.downloadResources = async function downloadResources() {
 	const postDirPath = this.getPostDirPath();
 
 	const notDownloadedResources = this.resources
-		.filter((resource => resource.type === POST_FILE_TYPE_IMAGE && !resource.localPath));
+		.filter((resource) => {
+			const isImage = resource.type === POST_FILE_TYPE_IMAGE;
+			const notReleased = !resource.isReleased;
+
+			return isImage && notReleased;
+		});
 
 	if (notDownloadedResources.length === 0) {
 		return;
@@ -151,7 +156,6 @@ postSchema.methods.releaseResources = async function releaseResources() {
 	}
 
 	this.resources.forEach((resource) => {
-		resource.set('localPath', null);
 		resource.set('isReleased', true);
 	});
 };
