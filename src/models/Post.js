@@ -33,6 +33,7 @@ const postSchema = mongoose.Schema({
 			type: { type: String, enum: [POST_FILE_TYPE_IMAGE, POST_FILE_TYPE_VIDEO] },
 			url: String,
 			localPath: String,
+			isDownloaded: { type: Boolean, default: false },
 			isReleased: { type: Boolean, default: false },
 		},
 	],
@@ -90,8 +91,8 @@ postSchema.methods.getUnpublishedDestinations = function getUnpublishedDestinati
 };
 
 postSchema.methods.getPostDirPath = function getPostDirPath() {
-	const postId = this.get('_id').toString();
-	return path.join(config.filesStorage, postId);
+	const dirId = this.get('guid') || this.get('_id').toString();
+	return path.join(config.filesStorage, dirId);
 };
 
 postSchema.methods.isAllDestinationsPublished = function isAllDestinationsPublished() {
@@ -104,9 +105,9 @@ postSchema.methods.downloadResources = async function downloadResources() {
 	const notDownloadedResources = this.resources
 		.filter((resource) => {
 			const isImage = resource.type === POST_FILE_TYPE_IMAGE;
-			const notReleased = !resource.isReleased;
+			const notDownloaded = !resource.isDownloaded;
 
-			return isImage && notReleased;
+			return isImage && notDownloaded;
 		});
 
 	if (notDownloadedResources.length === 0) {
@@ -125,6 +126,7 @@ postSchema.methods.downloadResources = async function downloadResources() {
 			request
 				.get(resource.url, { timeout: 3000 })
 				.on('response', () => {
+					resource.set('isDownloaded', true);
 					resource.set('localPath', localPath);
 					resolve();
 				})
