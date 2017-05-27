@@ -107,6 +107,8 @@ postSchema.methods.downloadResources = async function downloadResources() {
 			const isImage = resource.type === POST_FILE_TYPE_IMAGE;
 			const notDownloaded = !resource.isDownloaded;
 
+			debugFileResources(resource);
+
 			return isImage && notDownloaded;
 		});
 
