@@ -6,6 +6,7 @@ import Promise from 'bluebird';
 import fse from 'fs-extra';
 import config from '../config';
 import { debugFileResources } from '../lib/debug';
+import { promisesSome } from '../lib/utils';
 
 let Post;
 
@@ -100,27 +101,37 @@ postSchema.methods.isAllDestinationsPublished = function isAllDestinationsPublis
 postSchema.methods.downloadResources = async function downloadResources() {
 	const postDirPath = this.getPostDirPath();
 
+	const notDownloadedResources = this.resources
+		.filter((resource => resource.type === POST_FILE_TYPE_IMAGE && !resource.localPath));
+
+	if (notDownloadedResources.length === 0) {
+		return;
+	}
+
+	debugFileResources(`notDownloadedResources ${notDownloadedResources.length}`);
+
 	await fse.ensureDir(postDirPath);
 
-	const resourcesPromises = this.resources
-		.filter((resource => resource.type === POST_FILE_TYPE_IMAGE && !resource.localPath))
-		.map((resource) => {
-			return new Promise((resolve, reject) => {
-				const fileName = path.basename(resource.url);
-				const localPath = path.join(postDirPath, fileName);
+	const resourcesPromises = notDownloadedResources.map((resource) => {
+		return new Promise((resolve, reject) => {
+			const fileName = path.basename(resource.url);
+			const localPath = path.join(postDirPath, fileName);
 
-				request
-					.get(resource.url, { timeout: 3000 })
-					.on('response', () => {
-						resource.set('localPath', localPath);
-						resolve();
-					})
-					.on('error', () => resolve({ path: null, resource }))
-					.pipe(fs.createWriteStream(localPath));
-			});
+			request
+				.get(resource.url, { timeout: 3000 })
+				.on('response', () => {
+					resource.set('localPath', localPath);
+					resolve();
+				})
+				.on('error', (error) => {
+					debugFileResources(error);
+					reject(error);
+				})
+				.pipe(fs.createWriteStream(localPath));
 		});
+	});
 
-	await Promise.all(resourcesPromises);
+	await promisesSome(resourcesPromises);
 };
 
 postSchema.methods.tryReleaseResources = async function tryReleaseResources() {
