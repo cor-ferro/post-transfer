@@ -32,6 +32,7 @@ const postSchema = mongoose.Schema({
 			type: { type: String, enum: [POST_FILE_TYPE_IMAGE, POST_FILE_TYPE_VIDEO] },
 			url: String,
 			localPath: String,
+			isReleased: { type: Boolean, default: false },
 		},
 	],
 });
@@ -138,8 +139,9 @@ postSchema.methods.releaseResources = async function releaseResources() {
 		debugFileResources(error);
 	}
 
-	this.descriptionFiles.forEach((descriptionFile, descriptionFileIndex) => {
-		this.set(`descriptionFiles.${descriptionFileIndex}.localPath`, null);
+	this.resources.forEach((resource) => {
+		resource.set('localPath', null);
+		resource.set('isReleased', true);
 	});
 };
 
