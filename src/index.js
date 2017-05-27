@@ -99,10 +99,13 @@ async function sendUnpublishedPosts() {
 					return post
 						.tryReleaseResources()
 						.then(() => post.save())
-						.catch(() => post.save());
+						.catch((error) => {
+							debugApp(error);
+							return post.save();
+						});
 				})
 				.catch((error) => {
-					debugApp(error.message);
+					debugApp(error);
 					postDestination.set('failedReason', error.message);
 					postDestination.set('isFailed', true);
 					postDestination.set('isPublished', false);
@@ -134,7 +137,12 @@ async function intervalGrabPosts() {
 async function intervalSendPosts() {
 	debugInterval('send posts');
 
-	await queueFactory.createJob(queue, 'sendPosts');
+	const job = queueFactory.buildJob(queue, 'sendPosts');
+
+	job.removeOnComplete(true);
+
+	await queueFactory.saveJob(job);
+
 	queue.process('sendPosts', (localJob, done) => {
 		sendUnpublishedPosts()
 			.then(() => done())

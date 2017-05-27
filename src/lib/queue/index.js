@@ -18,13 +18,12 @@ export default {
 
 		return queue;
 	},
-	createJob(queue, name, params = {}) {
-		if (!queue) {
-			throw new Error('Failed create job, queue is empty');
-		}
-
+	buildJob(queue, name, params = {}) {
 		const job = queue.create(name, params);
 
+		return job;
+	},
+	saveJob(job) {
 		return new Promise((resolve, reject) => {
 			job.save((error) => {
 				if (error) {
@@ -34,5 +33,14 @@ export default {
 				}
 			});
 		});
+	},
+	createJob(queue, name, params = {}) {
+		if (!queue) {
+			throw new Error('Failed create job, queue is empty');
+		}
+
+		const job = queue.create(name, params);
+
+		return this.saveJob(job);
 	},
 };

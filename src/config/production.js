@@ -34,6 +34,11 @@ export default {
 			dataType: 'rss',
 			mapping: prattRssMapping,
 		},
+		{
+			address: 'https://api.pratt.top/rss/special/vk.rss?group=-40836944&limit=5',
+			dataType: 'rss',
+			mapping: prattRssMapping,
+		},
 	],
 	postDestinations: [
 		{

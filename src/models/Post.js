@@ -124,9 +124,7 @@ postSchema.methods.downloadResources = async function downloadResources() {
 
 postSchema.methods.tryReleaseResources = async function tryReleaseResources() {
 	return Promise.resolve(this.isAllDestinationsPublished())
-		.then((isAllPublished) => {
-			return isAllPublished ? this.releaseResources() : Promise.resolve();
-		});
+		.then(isAllPublished => (isAllPublished ? this.releaseResources() : Promise.resolve()));
 };
 
 postSchema.methods.releaseResources = async function releaseResources() {
@@ -134,7 +132,11 @@ postSchema.methods.releaseResources = async function releaseResources() {
 
 	debugFileResources(`release ${this.get('_id')}`);
 
-	await fse.remove(postDirPath);
+	try {
+		await fse.remove(postDirPath);
+	} catch (error) {
+		debugFileResources(error);
+	}
 
 	this.descriptionFiles.forEach((descriptionFile, descriptionFileIndex) => {
 		this.set(`descriptionFiles.${descriptionFileIndex}.localPath`, null);
