@@ -35,8 +35,6 @@ async function saveSourceDatasourceData(sourceData) {
 		const postModel = PostModel.createFromGrab(sourcePost);
 
 		return Promise.resolve()
-			// исправить скачивание файлов
-			// удалять файлы после отправки
 			.then(() => postModel.downloadResources())
 			.then(() => postModel.setDestinations(destinations))
 			.then(() => {
