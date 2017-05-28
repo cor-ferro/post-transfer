@@ -69,6 +69,12 @@ postSchema.static('createFromGrab', (grabbedPost) => {
 	return model;
 });
 
+postSchema.static('getByGuids', guids => Post.find(
+	{ guid: { $in: guids } },
+	{ _id: 1, guid: 1 },
+	{ lean: true },
+));
+
 postSchema.static('findUnPublished', ({ limit }) => {
 	const query = Post
 		.find({
@@ -106,8 +112,6 @@ postSchema.methods.downloadResources = async function downloadResources() {
 		.filter((resource) => {
 			const isImage = resource.type === POST_FILE_TYPE_IMAGE;
 			const notDownloaded = !resource.isDownloaded;
-
-			debugFileResources(resource);
 
 			return isImage && notDownloaded;
 		});
@@ -169,13 +173,11 @@ postSchema.methods.setSource = function setSource(source) {
 };
 
 postSchema.methods.setDestinations = function setDestinations(destinations = []) {
-	this.set('destinations', destinations.map((destination) => {
-		return {
-			_id: destination.get('_id'),
-			isPublished: false,
-			isFailed: false,
-		};
-	}));
+	this.set('destinations', destinations.map(destination => ({
+		_id: destination.get('_id'),
+		isPublished: false,
+		isFailed: false,
+	})));
 };
 
 Post = mongoose.model('Post', postSchema);

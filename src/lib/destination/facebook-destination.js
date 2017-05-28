@@ -1,10 +1,10 @@
 import request from 'request';
 import fs from 'fs';
 import Promise from 'bluebird';
-import de from 'deep-extend';
 import Destination from './destination';
 import { debugDest } from '../debug';
 import { promisesSome } from '../utils';
+import { ENV } from '../../config';
 
 import { POST_FILE_TYPE_IMAGE } from '../../models/Post';
 
@@ -49,6 +49,11 @@ class FacebookDestination extends Destination {
 
 	async createPagePost(modelPost) {
 		debugDest('facebook createPagePost');
+
+		if (ENV === 'dev') {
+			console.log('falsy create post');
+			return Promise.resolve({});
+		}
 
 		const imageResourcePromises = modelPost.resources
 			.filter(filterImageResource)

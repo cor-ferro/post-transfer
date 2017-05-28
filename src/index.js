@@ -31,24 +31,39 @@ async function grabPosts(dataPostSource) {
 
 async function saveSourceDatasourceData(sourceData) {
 	const destinations = await PostDestinationModel.find({ enabled: true });
-	const postPromises = sourceData.items.map(sourcePost => new Promise((resolve, reject) => {
-		const postModel = PostModel.createFromGrab(sourcePost);
 
-		return Promise.resolve()
-			.then(() => postModel.downloadResources())
-			.then(() => postModel.setDestinations(destinations))
-			.then(() => {
-				return PostModel
-					.count({ guid: postModel.get('guid') })
-					.exec()
-					.then(count => (count === 0 ? postModel.save() : null));
-			})
-			.then(() => resolve())
-			.catch(error => reject(error));
-	}));
+	const guids = sourceData.items.map(sourcePost => String(sourcePost.guid));
+	const existsModels = await PostModel.getByGuids(guids);
 
-	return promisesSome(postPromises)
-		.then(() => debugApp('all posts saved'))
+	const createPostPromises = [];
+
+	guids.forEach((guid) => {
+		const isModelExist = existsModels.find(model => model.guid === guid);
+
+		if (!isModelExist) {
+			const item = sourceData.items.find(sourcePost => sourcePost.guid === guid);
+			const postModel = PostModel.createFromGrab(item);
+
+			const promiseCreate = Promise.resolve()
+				.then(() => postModel.setDestinations(destinations))
+				.then(() => postModel.downloadResources())
+				.then(() => postModel.save());
+
+			createPostPromises.push(promiseCreate);
+		}
+	});
+
+	return promisesSome(createPostPromises)
+		.then((newModels) => {
+			const newCount = newModels.length;
+			const expectedCount = createPostPromises.length;
+
+			debugApp(`create ${newCount}/${expectedCount} models`);
+
+			if (expectedCount !== newCount) {
+				debugApp(`'WARN. expected: save ${expectedCount}, received: ${newCount}`);
+			}
+		})
 		.catch(error => debugGrab(error));
 }
 
