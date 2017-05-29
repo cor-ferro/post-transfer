@@ -3,6 +3,5 @@
     "editor.renderWhitespace": "all",
     "editor.insertSpaces": false,
     "editor.tabSize": 4,
-    "flowide.enable": true,
     "files.insertFinalNewline": true
 }
