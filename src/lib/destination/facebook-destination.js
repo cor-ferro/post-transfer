@@ -40,11 +40,30 @@ class FacebookDestination extends Destination {
 
 	createPost(modelPost) {
 		if (typeof this.params.pageId !== 'undefined') {
-			return this.createPagePost(modelPost);
+			return this.createPageEntity(modelPost);
 		} else {
 			debugDest('facebook support only pages');
 			throw new Error('support only pages');
 		}
+	}
+
+	async createPageEntity(modelPost) {
+		debugDest('facebook createPageEntity');
+
+		const imageResources = modelPost.resources.filter(filterImageResource);
+
+		if (imageResources.length > 1) {
+			debugDest('createPageEntity page album');
+			return this.createPageAlbum(imageResources, { name: modelPost.title });
+		} else if (imageResources.length === 1) {
+			debugDest('createPageEntity page photo');
+			return this.createPagePhoto(imageResources[0], { caption: modelPost.title });
+		} else if (imageResources.length === 0 && !modelPost.isEmptyTitle()) {
+			debugDest('createPageEntity page post');
+			return this.createPagePost(modelPost);
+		}
+
+		return Promise.resolve();
 	}
 
 	async createPagePost(modelPost) {
@@ -109,18 +128,46 @@ class FacebookDestination extends Destination {
 
 			request.post(requestParams, (error, response, body) => {
 				if (error) {
-					console.log(error);
-					reject();
+					reject(error);
 				} else {
-					debugDest(body);
 					resolve(JSON.parse(body));
 				}
 			});
 		});
 	}
 
+	async createPageAlbum(imageResources, { name, message }) {
+		try {
+			const albumRequestParams = this.createRequestParams({
+				uri: this.createPageUrl(['albums']),
+				qs: { message, name },
+			});
+
+			const album = await Destination.execPostRequest(albumRequestParams);
+
+			const photoPromises = imageResources.map(resource => this.createAlbumPhoto(album, resource));
+
+			await promisesSome(photoPromises);
+
+			return album;
+		} catch (e) {
+			console.error(e);
+			return {};
+		}
+	}
+
+	createAlbumPhoto(album, resource) {
+		const photoAlbumRequestParams = this.createRequestParams({
+			uri: this.createUrl(album.id, 'photos'),
+			formData: {
+				source: fs.createReadStream(resource.localPath),
+			},
+		});
+
+		return Destination.execPostRequest(photoAlbumRequestParams);
+	}
+
 	createRequestParams(options = {}) {
-		console.assert(this.params.token);
 		const requestParams = Object.assign({}, options, {
 			qs: Object.assign({}, options.qs, {
 				access_token: this.params.token,
@@ -131,13 +178,17 @@ class FacebookDestination extends Destination {
 	}
 
 	createPageUrl(params = []) {
-		console.assert(this.params.pageId);
-
 		const urlPath = [this.params.pageId].concat(params).join('/');
-		return `${PROTOCOL}${HOST}/${urlPath}`;
+		return this.createUrl(urlPath);
+	}
+
+	createUrl(...urlParts) {
+		const url = urlParts.join('/');
+		return `${PROTOCOL}${HOST}/${url}`;
 	}
 
 	setParams(params) {
+		console.assert(params.token);
 		this.params = params;
 	}
 }

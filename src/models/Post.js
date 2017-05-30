@@ -87,6 +87,10 @@ postSchema.static('findUnPublished', ({ limit }) => {
 	return query.exec();
 });
 
+postSchema.methods.isEmptyTitle = function isEmptyTitle() {
+	return /^\s*$/.test(this.title);
+};
+
 postSchema.methods.getUnpublishedDestinations = function getUnpublishedDestinations() {
 	return this.destinations.filter((destination) => {
 		const isNotPublished = destination.isPublished === false;
