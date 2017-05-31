@@ -49,7 +49,6 @@ function createLogStream() {
 }
 
 function log(type, message) {
-	console.log('getFormattedTime', getFormattedTime());
 	logStream.write(`[${type}] [${getFormattedTime()}] ${message}\n`);
 }
 
