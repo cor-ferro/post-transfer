@@ -5,6 +5,7 @@ import Destination from './destination';
 import { debugDest } from '../debug';
 import { promisesSome } from '../utils';
 import { ENV } from '../../config';
+import log from '../logger';
 
 import { POST_FILE_TYPE_IMAGE } from '../../models/Post';
 
@@ -41,74 +42,84 @@ class FacebookDestination extends Destination {
 	createPost(modelPost) {
 		if (typeof this.params.pageId !== 'undefined') {
 			return this.createPageEntity(modelPost);
-		} else {
-			debugDest('facebook support only pages');
-			throw new Error('support only pages');
 		}
+
+		debugDest('facebook support only pages');
+		throw new Error('support only pages');
 	}
 
 	async createPageEntity(modelPost) {
-		debugDest('facebook createPageEntity');
+		try {
+			debugDest('facebook createPageEntity');
 
-		const imageResources = modelPost.resources.filter(filterImageResource);
+			const imageResources = modelPost.resources.filter(filterImageResource);
 
-		if (imageResources.length > 1) {
-			debugDest('createPageEntity page album');
-			return this.createPageAlbum(imageResources, { name: modelPost.title });
-		} else if (imageResources.length === 1) {
-			debugDest('createPageEntity page photo');
-			return this.createPagePhoto(imageResources[0], { caption: modelPost.title });
-		} else if (imageResources.length === 0 && !modelPost.isEmptyTitle()) {
-			debugDest('createPageEntity page post');
-			return this.createPagePost(modelPost);
+			if (imageResources.length > 1) {
+				debugDest('createPageEntity page album');
+				return this.createPageAlbum(imageResources, { name: modelPost.title });
+			} else if (imageResources.length === 1) {
+				debugDest('createPageEntity page photo');
+				return this.createPagePhoto(imageResources[0], { caption: modelPost.title });
+			} else if (imageResources.length === 0 && !modelPost.isEmptyTitle()) {
+				debugDest('createPageEntity page post');
+				return this.createPagePost(modelPost);
+			}
+		} catch (err) {
+			log.objectError(err);
 		}
 
 		return Promise.resolve();
 	}
 
 	async createPagePost(modelPost) {
-		debugDest('facebook createPagePost');
+		try {
+			debugDest('facebook createPagePost');
 
-		if (ENV === 'dev') {
-			console.log('falsy create post');
-			return Promise.resolve({});
+			if (ENV === 'dev') {
+				console.log('falsy create post');
+				return Promise.resolve({});
+			}
+
+			const imageResourcePromises = modelPost.resources
+				.filter(filterImageResource)
+				.slice(0, 1) // @todo: В фейсбук грузим одну фотку, решить проблему
+				.map(resource => this.createPagePhoto(resource, { no_story: true }));
+
+			const uploadedPhotos = await promisesSome(imageResourcePromises);
+
+			const pageUrl = this.createPageUrl(['feed']);
+			const urlOptions = {
+				message: modelPost.title,
+			};
+			const form = {};
+
+			uploadedPhotos.forEach((uploadedPhoto) => {
+				form.object_attachment = uploadedPhoto.id;
+			});
+
+			const requestParams = this.createRequestParams({
+				method: 'POST',
+				uri: pageUrl,
+				qs: urlOptions,
+				form,
+			});
+
+			return new Promise((resolve, reject) => {
+				request.post(requestParams, (error, response, body) => {
+					if (error) {
+						log.objectError(error);
+						reject();
+					} else {
+						debugDest(body);
+						resolve(JSON.parse(body));
+					}
+				});
+			});
+		} catch (err) {
+			log.objectError(err);
 		}
 
-		const imageResourcePromises = modelPost.resources
-			.filter(filterImageResource)
-			.slice(0, 1) // @todo: В фейсбук грузим одну фотку, решить проблему
-			.map(resource => this.createPagePhoto(resource, { no_story: true }));
-
-		const uploadedPhotos = await promisesSome(imageResourcePromises);
-
-		const pageUrl = this.createPageUrl(['feed']);
-		const urlOptions = {
-			message: modelPost.title,
-		};
-		const form = {};
-
-		uploadedPhotos.forEach((uploadedPhoto) => {
-			form.object_attachment = uploadedPhoto.id;
-		});
-
-		const requestParams = this.createRequestParams({
-			method: 'POST',
-			uri: pageUrl,
-			qs: urlOptions,
-			form,
-		});
-
-		return new Promise((resolve, reject) => {
-			request.post(requestParams, (error, response, body) => {
-				if (error) {
-					console.log(error);
-					reject();
-				} else {
-					debugDest(body);
-					resolve(JSON.parse(body));
-				}
-			});
-		});
+		return Promise.resolve();
 	}
 
 	createPagePhoto(resource, postOptions = {}) {
@@ -150,8 +161,8 @@ class FacebookDestination extends Destination {
 			await promisesSome(photoPromises);
 
 			return album;
-		} catch (e) {
-			console.error(e);
+		} catch (err) {
+			log.objectError(err);
 			return {};
 		}
 	}

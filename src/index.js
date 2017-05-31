@@ -9,6 +9,7 @@ import PostModel from './models/Post';
 import PostDestinationModel from './models/PostDestination';
 import destinationsFactory from './lib/destination';
 import { promisesSome } from './lib/utils';
+import log from './lib/logger';
 
 const queue = queueFactory.create();
 
