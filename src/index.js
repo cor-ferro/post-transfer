@@ -62,6 +62,7 @@ async function saveSourceDatasourceData(sourceData) {
 			debugApp(`create ${newCount}/${expectedCount} models`);
 
 			if (expectedCount !== newCount) {
+				log.warn(`'WARN. expected: save ${expectedCount}, received: ${newCount}`);
 				debugApp(`'WARN. expected: save ${expectedCount}, received: ${newCount}`);
 			}
 		})
@@ -147,13 +148,22 @@ async function intervalGrabPosts() {
 	debugInterval('grab posts');
 
 	const jobsPromises = config.postSources.map(postSource => queueFactory.createJob(queue, 'grabPosts', { postSource }));
-	await Promise.all(jobsPromises);
+
+	try {
+		await Promise.all(jobsPromises);
+	} catch (error) {
+		log.objectError(error);
+		return;
+	}
 
 	queue.process('grabPosts', 3, (localJob, done) => {
 		grabPosts(localJob.data.postSource)
 			.then(grabData => saveSourceDatasourceData(grabData))
 			.then(() => done())
-			.catch(done);
+			.catch((error) => {
+				log.objectError(error);
+				done(error);
+			});
 	});
 }
 
@@ -169,7 +179,10 @@ async function intervalSendPosts() {
 	queue.process('sendPosts', (localJob, done) => {
 		sendUnpublishedPosts()
 			.then(() => done())
-			.catch(done);
+			.catch((error) => {
+				log.objectError(error);
+				done(error);
+			});
 	});
 }
 
