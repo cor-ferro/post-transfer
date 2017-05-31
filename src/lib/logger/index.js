@@ -7,16 +7,6 @@ const LOG_TYPE_ERROR = 'error';
 
 let logStream = null;
 
-function exitHandler(options, err) {
-	if (options.cleanup) console.log('clean');
-	if (err) console.log(err.stack);
-	if (options.exit) {
-		console.log('close log stream');
-		logStream.end();
-		process.exit();
-	}
-}
-
 function getFormattedTime() {
 	const date = new Date();
 
@@ -58,6 +48,25 @@ function createLogStream() {
 	});
 }
 
+function log(type, message) {
+	console.log('getFormattedTime', getFormattedTime());
+	logStream.write(`[${type}] [${getFormattedTime()}] ${message}\n`);
+}
+
+function exitHandler(options, err) {
+	if (options.cleanup) console.log('clean');
+	if (err) {
+		log(LOG_TYPE_ERROR, err.message);
+		log(LOG_TYPE_ERROR, err.stack);
+		console.log(err.stack);
+	}
+	if (options.exit) {
+		console.log('close log stream');
+		logStream.end();
+		process.exit();
+	}
+}
+
 process.on('exit', exitHandler.bind(null, { cleanup: true }));
 process.on('SIGINT', exitHandler.bind(null, { exit: true }));
 process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
@@ -65,20 +74,20 @@ process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
 createLogStream();
 
 export default {
-	log(type, message) {
-		console.log('getFormattedTime', getFormattedTime());
-		logStream.write(`[${type}] [${getFormattedTime()}] ${message}\n`);
-	},
 	info(message) {
-		this.log(LOG_TYPE_INFO, message);
+		log(LOG_TYPE_INFO, message);
 	},
 	warn(message) {
-		this.log(LOG_TYPE_WARN, message);
+		log(LOG_TYPE_WARN, message);
 	},
 	error(message) {
-		this.log(LOG_TYPE_ERROR, message);
+		log(LOG_TYPE_ERROR, message);
 	},
 	objectError(error) {
+		if (!error) {
+			return;
+		}
+
 		this.error(error.message);
 		this.error(error.stack);
 	},

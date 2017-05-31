@@ -65,7 +65,10 @@ async function saveSourceDatasourceData(sourceData) {
 				debugApp(`'WARN. expected: save ${expectedCount}, received: ${newCount}`);
 			}
 		})
-		.catch(error => debugGrab(error));
+		.catch((error) => {
+			log.objectError(error);
+			debugGrab(error);
+		});
 }
 
 async function sendUnpublishedPosts() {
@@ -89,6 +92,7 @@ async function sendUnpublishedPosts() {
 			const destinationModel = destinationsFactory.getByModel(destinations, postDestination);
 
 			if (!destinationModel) {
+				log.warn('not found destination');
 				debugApp('not found destination');
 				postDestination.set('isFailed', true);
 				postDestination.set('reason', 'not found destination');
@@ -98,6 +102,7 @@ async function sendUnpublishedPosts() {
 			const destination = destinationsFactory.create(destinationModel);
 
 			if (!destination) {
+				log.warn(`unknown destination type ${destinationModel.type}`);
 				debugApp(`unknown destination type ${destinationModel.type}`);
 				postDestination.set('isFailed', true);
 				postDestination.set('reason', `unknown destination type ${destinationModel.type}`);
@@ -116,11 +121,13 @@ async function sendUnpublishedPosts() {
 						.tryReleaseResources()
 						.then(() => post.save())
 						.catch((error) => {
+							log.objectError(error);
 							debugApp(error);
 							return post.save();
 						});
 				})
 				.catch((error) => {
+					log.objectError(error);
 					debugApp(error);
 					postDestination.set('failedReason', error.message);
 					postDestination.set('isFailed', true);
@@ -180,6 +187,7 @@ app.once('ready', async () => {
 
 app.on('start', () => {
 	debugApp('start app');
+	log.info('start app event');
 	const intervalGrabMs = config.intervals.grab;
 	const intervalSendMs = config.intervals.send;
 
@@ -191,6 +199,7 @@ app.on('start', () => {
 
 	if (isTooLowerInterval) {
 		debugApp(`some interval, value is lower than ${SAFE_INTERVAL}. prevent start app.`);
+		log.warn(`some interval, value is lower than ${SAFE_INTERVAL}. prevent start app.`);
 		return;
 	}
 
@@ -200,6 +209,7 @@ app.on('start', () => {
 
 app.on('stop', () => {
 	debugApp('stop app');
+	log.info('stop app event');
 	clearInterval(intervalGrabId);
 	clearInterval(intervalSendId);
 });
