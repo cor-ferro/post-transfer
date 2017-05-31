@@ -1,5 +1,4 @@
 import request from 'request';
-import Promise from 'bluebird';
 import { debugDest } from '../debug';
 
 class Destination {

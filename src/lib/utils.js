@@ -1,5 +1,3 @@
-import Promise from 'bluebird';
-
 export function promisesSome(promises = []) {
 	return Promise
 		.all(promises.map(promise => promise.reflect()))

@@ -1,6 +1,5 @@
 import EventEmitter from 'events';
 import fse from 'fs-extra';
-import Promise from 'bluebird';
 import { debugApp, debugDb } from '../lib/debug';
 import db from '../db';
 import config from '../config';

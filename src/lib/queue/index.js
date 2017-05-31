@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import kue from 'kue';
 import config from '../../config';
 

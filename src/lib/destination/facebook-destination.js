@@ -1,6 +1,5 @@
 import request from 'request';
 import fs from 'fs';
-import Promise from 'bluebird';
 import Destination from './destination';
 import { debugDest } from '../debug';
 import { promisesSome } from '../utils';

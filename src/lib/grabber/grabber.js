@@ -1,5 +1,3 @@
-import Promise from 'bluebird';
-
 export default class Grabber {
 	constructor() {
 		this.source = [];

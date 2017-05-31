@@ -2,7 +2,6 @@ import path from 'path';
 import fs from 'fs';
 import request from 'request';
 import mongoose, { Schema } from 'mongoose';
-import Promise from 'bluebird';
 import fse from 'fs-extra';
 import config from '../config';
 import { debugFileResources } from '../lib/debug';

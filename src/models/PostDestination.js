@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-// import Promise from 'bluebird';
 
 const postDestinationSchema = mongoose.Schema({
 	type: {

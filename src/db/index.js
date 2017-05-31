@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import Promise from 'bluebird';
 import config from '../config';
 import { debugDb } from '../lib/debug';
 
