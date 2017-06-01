@@ -8,6 +8,7 @@ const debugDest = createDebug('post.destination');
 const debugReader = createDebug('post.reader');
 const debugInterval = createDebug('post.interval');
 const debugFileResources = createDebug('post.file-resource');
+const debugError = createDebug('post.error');
 
 export {
 	debugApp,
@@ -18,4 +19,5 @@ export {
 	debugDest,
 	debugInterval,
 	debugFileResources,
+	debugError,
 };

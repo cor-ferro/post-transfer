@@ -22,13 +22,12 @@
     "gulp-watch": "^4.3.11"
   },
   "dependencies": {
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
-    "bluebird": "3.5.0",
     "debug": "2.6.8",
     "deep-extend": "0.5.0",
     "fs-extra": "3.0.1",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
     "htmlparser2": "3.9.2",
     "kue": "0.11.5",
     "libxmljs": "0.18.4",

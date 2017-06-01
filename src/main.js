@@ -67,7 +67,6 @@ async function saveSourceDatasourceData(sourceData) {
 		})
 		.catch((error) => {
 			log.objectError(error);
-			debugGrab(error);
 		});
 }
 
@@ -122,13 +121,11 @@ async function sendUnpublishedPosts() {
 						.then(() => post.save())
 						.catch((error) => {
 							log.objectError(error);
-							debugApp(error);
 							return post.save();
 						});
 				})
 				.catch((error) => {
 					log.objectError(error);
-					debugApp(error);
 					postDestination.set('failedReason', error.message);
 					postDestination.set('isFailed', true);
 					postDestination.set('isPublished', false);

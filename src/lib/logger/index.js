@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { debugError } from '../debug';
 
 const LOG_TYPE_INFO = 'info';
 const LOG_TYPE_WARN = 'warn';
@@ -80,14 +81,21 @@ export default {
 		log(LOG_TYPE_WARN, message);
 	},
 	error(message) {
+		debugError('error: ', message);
 		log(LOG_TYPE_ERROR, message);
 	},
 	objectError(error) {
 		if (!error) {
+			this.warn('log not object error');
+			this.warn(error);
 			return;
 		}
 
-		this.error(error.message);
-		this.error(error.stack);
+		if (error instanceof Error) {
+			this.error(error.message);
+			this.error(error.stack);
+		} else {
+			this.error(error);
+		}
 	},
 };
