@@ -12,13 +12,10 @@ function filterImageResource(resource) {
 
 class FacebookDestination extends Destination {
 	constructor(params = {}) {
-		super();
-
+		super(params);
+		console.assert(params.token);
 		this.host = 'graph.facebook.com';
 		this.protocol = 'https://';
-		this.params = {};
-
-		this.setParams(params);
 	}
 
 	createPost(modelPost) {
@@ -145,11 +142,6 @@ class FacebookDestination extends Destination {
 	createPageUrl(params = []) {
 		const urlPath = [this.params.pageId].concat(params).join('/');
 		return this.createUrl(urlPath);
-	}
-
-	setParams(params) {
-		console.assert(params.token);
-		this.params = params;
 	}
 }
 
