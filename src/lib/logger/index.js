@@ -7,6 +7,7 @@ const LOG_TYPE_WARN = 'warn';
 const LOG_TYPE_ERROR = 'error';
 
 let logStream = null;
+let logStreamCreateDate = null;
 
 function getFormattedTime() {
 	const date = new Date();
@@ -40,7 +41,13 @@ function createLogStream() {
 		// folder exists or no permissions
 	}
 
+	if (logStream) {
+		console.log('close exist stream');
+		logStream.end();
+	}
+
 	logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
+	logStreamCreateDate = new Date();
 
 	console.log(`create log on ${logFilePath}`);
 
@@ -50,6 +57,13 @@ function createLogStream() {
 }
 
 function log(type, message) {
+	const currentDate = new Date();
+
+	// пересоздаем стрем на новый день
+	if (currentDate.getDate() !== logStreamCreateDate.getDate()) {
+		createLogStream();
+	}
+
 	logStream.write(`[${type}] [${getFormattedTime()}] ${message}\n`);
 }
 

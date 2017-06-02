@@ -25,6 +25,7 @@ class Destination {
 					console.log(error);
 					reject(error);
 				} else {
+					debugDest('X-Page-Usage', response.headers['x-page-usage']);
 					debugDest(body);
 					resolve(JSON.parse(body));
 				}
