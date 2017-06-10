@@ -28,7 +28,7 @@ function getFormattedTime() {
 function createLogStream() {
 	const currentDate = new Date();
 	const fileNameDate = currentDate.getDate();
-	const fileNameMonth = currentDate.getDate() + 1;
+	const fileNameMonth = currentDate.getMonth() + 1;
 	const fileNameYear = currentDate.getFullYear();
 
 	const appDir = path.resolve(path.join(__dirname, '..', '..', '..'));
