@@ -1,5 +1,1 @@
-export default {
-	db: {
-		path: 'mongodb://localhost/post-transfer',
-	},
-};
+export default require('./dev');

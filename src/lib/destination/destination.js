@@ -22,7 +22,7 @@ class Destination {
 	}
 
 	static execPostRequest(requestParams) {
-		if (ENV === 'dev') {
+		if (ENV !== 'production') {
 			console.log('falsy exec request');
 			return Promise.resolve({});
 		}
@@ -34,6 +34,7 @@ class Destination {
 					reject(error);
 				} else {
 					// facebook specefic log
+					// https://stackoverflow.com/questions/38872402/facebook-32-page-request-limited-reached
 					debugDest('X-Page-Usage', response.headers['x-page-usage']);
 					debugDest(body);
 					resolve(JSON.parse(body));

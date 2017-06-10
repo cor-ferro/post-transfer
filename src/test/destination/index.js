@@ -1,0 +1,3 @@
+describe('destinations', () => {
+	require('./facebook');
+});
